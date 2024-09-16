@@ -8,6 +8,7 @@
 
   let instructionsList = [];
   let statusMessage = "";
+  let activeTab = "Prompts";
 
   onMount(() => {
     chrome.storage.sync.get("instructionsList", (data) => {
@@ -35,45 +36,73 @@
       statusMessage = "Instructions copied to clipboard!";
     });
   }
+
+  function switchTab(tab) {
+    activeTab = tab;
+    statusMessage = "";
+  }
 </script>
 
 <main>
-  <h1>ChatGPT Customizer</h1>
-
+  <header>
+    <h2>ChatGPT Customizer</h2>
+  </header>
   <div>
-    <label for="aboutUser">What would you like ChatGPT to know about you?</label
-    >
-    <textarea
-      id="aboutUser"
-      bind:value={customInstructions.aboutUser}
-      placeholder="Provide information about yourself..."
-    ></textarea>
+    <nav>
+      <button
+        on:click={() => switchTab("Prompts")}
+        class:active={activeTab === "Prompts"}>Prompts</button
+      >
+      <button
+        on:click={() => switchTab("Create")}
+        class:active={activeTab === "Create"}>Create</button
+      >
+    </nav>
   </div>
+  {#if activeTab === "Prompts"}
+    <h3>Saved Custom Instructions</h3>
+    {#if instructionsList.length > 0}
+      <ul>
+        {#each instructionsList as instructions, index}
+          <li>
+            <strong>Instructions {index + 1}</strong><br />
+            <button on:click={() => copyToClipboard(instructions)}
+              >Copy to Clipboard</button
+            >
+            <p><strong>What to know:</strong> {instructions.aboutUser}</p>
+            <p><strong>How to respond:</strong> {instructions.responseStyle}</p>
+          </li>
+        {/each}
+      </ul>
+    {:else}
+      <p>No saved prompts yet. Create one in the "Create" tab.</p>
+    {/if}
+  {/if}
 
-  <div>
-    <label for="responseStyle">How would you like ChatGPT to respond?</label>
-    <textarea
-      id="responseStyle"
-      bind:value={customInstructions.responseStyle}
-      placeholder="Specify the response style..."
-    ></textarea>
-  </div>
+  {#if activeTab === "Create"}
+    <h3>Create New Custom Instructions</h3>
+    <div>
+      <label for="aboutUser"
+        >What would you like ChatGPT to know about you?</label
+      >
+      <textarea
+        id="aboutUser"
+        bind:value={customInstructions.aboutUser}
+        placeholder="Provide information about yourself..."
+      ></textarea>
+    </div>
 
-  <button on:click={saveInstructions}>Save Custom Instructions</button>
+    <div>
+      <label for="responseStyle">How would you like ChatGPT to respond?</label>
+      <textarea
+        id="responseStyle"
+        bind:value={customInstructions.responseStyle}
+        placeholder="Specify the response style..."
+      ></textarea>
+    </div>
 
-  <h2>Saved Custom Instructions</h2>
-  <ul>
-    {#each instructionsList as instructions, index}
-      <li>
-        <strong>Instructions {index + 1}</strong><br />
-        <button on:click={() => copyToClipboard(instructions)}
-          >Copy to Clipboard</button
-        >
-        <p><strong>What to know:</strong> {instructions.aboutUser}</p>
-        <p><strong>How to respond:</strong> {instructions.responseStyle}</p>
-      </li>
-    {/each}
-  </ul>
+    <button on:click={saveInstructions}>Save Custom Instructions</button>
+  {/if}
 
   <div>{statusMessage}</div>
 </main>
@@ -81,6 +110,31 @@
 <style>
   main {
     padding: 10px;
+  }
+
+  header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+  }
+
+  nav {
+    display: flex;
+  }
+
+  nav button {
+    margin-right: 10px;
+    padding: 8px 16px;
+    cursor: pointer;
+    border: none;
+    background-color: #ddd;
+    border-radius: 4px;
+  }
+
+  nav button.active {
+    background-color: #007bff;
+    color: white;
   }
 
   label {
